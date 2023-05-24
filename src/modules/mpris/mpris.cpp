@@ -619,15 +619,23 @@ auto Mpris::update() -> void {
 
   try {
     auto label_format = fmt::format(
-        fmt::runtime(formatstr), fmt::arg("player", info.name),
-        fmt::arg("status", info.status_string), fmt::arg("artist", getArtistStr(info, true)),
-        fmt::arg("title", getTitleStr(info, true)), fmt::arg("album", getAlbumStr(info, true)),
+        fmt::runtime(formatstr),
+        fmt::arg("player", std::string(Glib::Markup::escape_text(info.name))),
+        fmt::arg("status", info.status_string),
+        fmt::arg("artist", std::string(Glib::Markup::escape_text(getArtistStr(info, true)))),
+        fmt::arg("title", std::string(Glib::Markup::escape_text(getTitleStr(info, true)))),
+        fmt::arg("album", std::string(Glib::Markup::escape_text(getAlbumStr(info, true)))),
         fmt::arg("length", length), fmt::arg("position", position),
         fmt::arg("dynamic", getDynamicStr(info, true, true)),
         fmt::arg("player_icon", getIconFromJson(config_["player-icons"], info.name)),
         fmt::arg("status_icon", getIconFromJson(config_["status-icons"], info.status_string)));
 
-    label_.set_markup(label_format);
+    if (label_format.empty()) {
+      label_.hide();
+    } else {
+      label_.set_markup(label_format);
+      label_.show();
+    }
   } catch (fmt::format_error const& e) {
     spdlog::warn("mpris: format error: {}", e.what());
   }
